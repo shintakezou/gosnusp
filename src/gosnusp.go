@@ -247,9 +247,9 @@ func (e *Snusp) Interpret(p Pos, d Dir, m Pos) {
 		case lang.Split:
 			if e.bloated {
 				e.sg.Add(1)
-				go e.Interpret(p, d, m)
 				p.x += d.dx
 				p.y += d.dy
+				go e.Interpret(p, d, m)
 			}
 		case lang.Rand:
 			if e.bloated {
@@ -291,7 +291,7 @@ func main() {
 	flag.BoolVar(&snusp.debug, "debug", false, "debug")
 	flag.BoolVar(&snusp.modular, "modular", true, "modular SNUSP")
 	flag.BoolVar(&snusp.bloated, "bloated", false, "bloated SNUSP")
-	flag.BoolVar(&snusp.twist, "twist", false, "modular SNUSP flavour: twist")
+	flag.BoolVar(&snusp.twist, "twist", true, "modular SNUSP flavour: twist")
 	flag.Parse()
 	if flag.NArg() > 0 {
 		snusp.Load(flag.Arg(0))
