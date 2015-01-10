@@ -1,5 +1,5 @@
 /*
-   snusp - a SNUSP esolang interpreter written in Go
+   gosnusp - a SNUSP esolang interpreter written in Go
    Copyright (C) 2014  Mauro Panigada
 
    This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,8 @@
 package main
 
 import (
-	"./lang"
+	. "./lang"
+	"./lang/dir"
 	"bufio"
 	"container/list"
 	"flag"
@@ -37,24 +38,9 @@ import (
 	"sync"
 )
 
-type Pos struct {
-	x int
-	y int
-}
-
-type Dir struct {
-	dx int
-	dy int
-}
-
 type State struct {
 	pos Pos
-	dir Dir
-}
-
-type Size struct {
-	w int
-	h int
+	dir dir.Dir
 }
 
 type Snusp struct {
@@ -81,15 +67,15 @@ func Max(x, y int) int {
 
 func (e *Snusp) Get(p Pos) string {
 	var res string
-	if p.x < 0 || p.y < 0 {
-		return lang.NoOp
+	if p.X < 0 || p.Y < 0 {
+		return NoOp
 	}
 	e.codeLock.RLock()
-	if s, ok := e.code[p.y]; ok {
-		if p.x >= len(s) {
-			res = lang.NoOp
+	if s, ok := e.code[p.Y]; ok {
+		if p.X >= len(s) {
+			res = NoOp
 		} else {
-			res = s[p.x : p.x+1]
+			res = s[p.X : p.X+1]
 		}
 	}
 	e.codeLock.RUnlock()
@@ -124,10 +110,10 @@ func (e *Snusp) GetMem(p Pos) byte {
 
 func (e *Snusp) Load(fileName string) {
 	e.loaded = false
-	e.pos.x = 0
-	e.pos.y = 0
-	e.size.w = 0
-	e.size.h = 0
+	e.pos.X = 0
+	e.pos.Y = 0
+	e.size.W = 0
+	e.size.H = 0
 	e.code = make(map[int]string)
 	e.mem = make(map[Pos]byte)
 	fh, errOpen := os.Open(fileName)
@@ -144,12 +130,12 @@ func (e *Snusp) Load(fileName string) {
 	for {
 		if s, err = r.ReadString('\n'); err == nil {
 			e.code[ly] = s
-			e.size.w = Max(e.size.w, len(s))
-			if px := strings.Index(s, lang.Start); px != -1 {
-				e.pos.y = ly
-				e.pos.x = px
+			e.size.W = Max(e.size.W, len(s))
+			if px := strings.Index(s, Start); px != -1 {
+				e.pos.Y = ly
+				e.pos.X = px
 				if e.debug {
-					log.Printf("Start at (%d, %d)", e.pos.x, e.pos.y)
+					log.Printf("Start at (%d, %d)", e.pos.X, e.pos.Y)
 				}
 			}
 			ly++
@@ -157,9 +143,10 @@ func (e *Snusp) Load(fileName string) {
 			e.code[ly] = s
 			ly++
 			e.loaded = true
-			e.size.h = ly
+			e.size.H = ly
+			e.size.W = Max(e.size.W, len(s))
 			if e.debug {
-				log.Printf("w=%d, h=%d", e.size.w, e.size.h)
+				log.Printf("w=%d, h=%d", e.size.W, e.size.H)
 			}
 			break
 		} else {
@@ -169,52 +156,44 @@ func (e *Snusp) Load(fileName string) {
 	}
 }
 
-func (e *Snusp) Interpret(p Pos, d Dir, m Pos) {
+func (e *Snusp) Interpret(p Pos, d dir.Dir, m Pos) {
 	if e.debug {
-		log.Printf("interpret at (%d,%d), dir (%d,%d)", p.x, p.y, d.dx, d.dy)
+		log.Printf("interpret at (%d,%d), dir (%d,%d)", p.X, p.Y, d.Dx, d.Dy)
 	}
 	defer e.sg.Done()
 	stdin := bufio.NewReader(os.Stdin)
 	cstack := list.New()
-	for p.x >= 0 && p.x < e.size.w && p.y >= 0 && p.y < e.size.h {
+	for p.X >= 0 && p.X < e.size.W && p.Y >= 0 && p.Y < e.size.H {
 		c := e.Get(p)
 		if e.debug {
 			log.Print(p, c, d)
 		}
 		switch c {
-		case lang.Left:
-			m.x--
-		case lang.Right:
-			m.x++
-		case lang.Up:
+		case Left:
+			m.X--
+		case Right:
+			m.X++
+		case Up:
 			if e.bloated {
-				m.y--
+				m.Y--
 			}
-		case lang.Down:
+		case Down:
 			if e.bloated {
-				m.y++
+				m.Y++
 			}
-		case lang.Incr:
+		case Incr:
 			e.SetMem(m, 1, false)
-		case lang.Decr:
+		case Decr:
 			e.SetMem(m, -1, false)
-		case lang.Lurd:
-			if d.dx != 0 {
-				d = Dir{0, d.dx}
-			} else {
-				d = Dir{d.dy, 0}
-			}
-		case lang.Ruld:
-			if d.dx != 0 {
-				d = Dir{0, -d.dx}
-			} else {
-				d = Dir{-d.dy, 0}
-			}
-		case lang.Leave:
+		case Lurd:
+			d = LurdMap[d]
+		case Ruld:
+			d = RuldMap[d]
+		case Leave:
 			if e.modular {
 				if cstack.Len() == 0 {
 					if e.debug {
-						log.Printf("leave at (%d,%d)", p.x, p.y)
+						log.Printf("leave at (%d,%d)", p.X, p.Y)
 					}
 					return
 				}
@@ -223,42 +202,42 @@ func (e *Snusp) Interpret(p Pos, d Dir, m Pos) {
 				p = st.pos
 				d = st.dir
 				if e.twist {
-					p.x += d.dx
-					p.y += d.dy
+					p.X += d.Dx
+					p.Y += d.Dy
 				}
 				cstack.Remove(el)
 			}
-		case lang.Enter:
+		case Enter:
 			if e.modular {
-				cstack.PushBack(State{Pos{p.x, p.y}, d})
+				cstack.PushBack(State{Pos{p.X, p.Y}, d})
 				if !e.twist {
-					p.x += d.dx
-					p.y += d.dy
+					p.X += d.Dx
+					p.Y += d.Dy
 				}
 			}
-		case lang.Skip:
-			p.x += d.dx
-			p.y += d.dy
-		case lang.SkipZ:
+		case Skip:
+			p.X += d.Dx
+			p.Y += d.Dy
+		case SkipZ:
 			if e.GetMem(m) == 0 {
-				p.x += d.dx
-				p.y += d.dy
+				p.X += d.Dx
+				p.Y += d.Dy
 			}
-		case lang.Split:
+		case Split:
 			if e.bloated {
 				e.sg.Add(1)
-				p.x += d.dx
-				p.y += d.dy
+				p.X += d.Dx
+				p.Y += d.Dy
 				go e.Interpret(p, d, m)
 			}
-		case lang.Rand:
+		case Rand:
 			if e.bloated {
 				e.SetMem(m, rand.Intn(256), true)
 			}
-		case lang.Write:
+		case Write:
 			rb := e.GetMem(m)
 			fmt.Printf("%c", rb)
-		case lang.Read:
+		case Read:
 			b_in, b_err := stdin.ReadByte()
 			if b_err == io.EOF {
 				return
@@ -269,11 +248,11 @@ func (e *Snusp) Interpret(p Pos, d Dir, m Pos) {
 				e.SetMem(m, int(b_in&0xFF), true)
 			}
 		}
-		p.x += d.dx
-		p.y += d.dy
+		p.X += d.Dx
+		p.Y += d.Dy
 	}
 	if e.debug {
-		log.Printf("exit at (%d,%d)", p.x, p.y)
+		log.Printf("exit at (%d,%d)", p.X, p.Y)
 	}
 }
 
@@ -282,7 +261,7 @@ func (e *Snusp) Run() {
 		return
 	}
 	e.sg.Add(1)
-	go e.Interpret(e.pos, Dir{1, 0}, Pos{0, 0})
+	go e.Interpret(e.pos, dir.Dir{1, 0}, Pos{0, 0})
 	e.sg.Wait()
 }
 
