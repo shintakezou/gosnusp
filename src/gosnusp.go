@@ -51,6 +51,8 @@ type Snusp struct {
 	twist   bool
 	eof0    bool
 
+	seed int64
+
 	pos      Pos
 	size     Size
 	code     map[int]string
@@ -274,6 +276,7 @@ func (e *Snusp) Run() {
 	if !e.loaded {
 		return
 	}
+	rand.Seed(e.seed)
 	e.sg.Add(1)
 	go e.Interpret(e.pos, dir.Dir{1, 0}, Pos{0, 0})
 	e.sg.Wait()
@@ -292,6 +295,7 @@ func main() {
 	flag.BoolVar(&snusp.bloated, "bloated", false, "bloated SNUSP")
 	flag.BoolVar(&snusp.twist, "twist", true, "modular SNUSP flavour: twist")
 	flag.BoolVar(&snusp.eof0, "eof0", false, "EOF place 0 in the cell")
+	flag.Int64Var(&snusp.seed, "seed", 1, "seed (bloated SNUSP)")
 	flag.Parse()
 	if flag.NArg() > 0 {
 		snusp.Load(flag.Arg(0))
