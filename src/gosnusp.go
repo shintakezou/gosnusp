@@ -24,8 +24,8 @@
 package main
 
 import (
-	. "./lang"
-	"./lang/dir"
+	. "./snusp"
+	"./snusp/dir"
 	"bufio"
 	"container/list"
 	"flag"

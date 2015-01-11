@@ -21,7 +21,7 @@
 
 */
 
-package lang
+package snusp
 
 import "./dir"
 
