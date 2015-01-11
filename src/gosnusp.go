@@ -188,6 +188,8 @@ func (e *Snusp) Interpret(p Pos, d dir.Dir, m Pos) {
 		case Decr:
 			e.SetMem(m, -1, false)
 		case Lurd:
+			// it was a lot better when it was done with the if...
+			// but I wanted to try init() in a package, and so...
 			d = LurdMap[d]
 		case Ruld:
 			d = RuldMap[d]
@@ -272,6 +274,12 @@ func (e *Snusp) Run() {
 	e.sg.Add(1)
 	go e.Interpret(e.pos, dir.Dir{1, 0}, Pos{0, 0})
 	e.sg.Wait()
+	if e.debug {
+		log.Print("memory dump")
+		for k, v := range e.mem {
+			log.Print(k, v)
+		}
+	}
 }
 
 func main() {
@@ -285,12 +293,6 @@ func main() {
 	if flag.NArg() > 0 {
 		snusp.Load(flag.Arg(0))
 		snusp.Run()
-		if snusp.debug {
-			log.Print("memory dump")
-			for k, v := range snusp.mem {
-				log.Print(k, v)
-			}
-		}
 	} else {
 		fmt.Printf("%s [flags] FILENAME\nFlags and default values are:\n", os.Args[0])
 		flag.PrintDefaults()
