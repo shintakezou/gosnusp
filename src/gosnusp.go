@@ -44,11 +44,13 @@ type State struct {
 }
 
 type Snusp struct {
-	debug    bool
-	loaded   bool
-	modular  bool
-	bloated  bool
-	twist    bool
+	debug   bool
+	loaded  bool
+	modular bool
+	bloated bool
+	twist   bool
+	eof0    bool
+
 	pos      Pos
 	size     Size
 	code     map[int]string
@@ -240,7 +242,14 @@ func (e *Snusp) Interpret(p Pos, d dir.Dir, m Pos) {
 		case Read:
 			b_in, b_err := stdin.ReadByte()
 			if b_err == io.EOF {
-				return
+				if e.eof0 {
+					if e.debug {
+						log.Print("EOF write 0 in cell")
+					}
+					e.SetMem(m, 0, true)
+				} else {
+					return
+				}
 			} else if b_err == nil {
 				if e.debug {
 					log.Printf("read: %d", int(b_in))
@@ -271,6 +280,7 @@ func main() {
 	flag.BoolVar(&snusp.modular, "modular", true, "modular SNUSP")
 	flag.BoolVar(&snusp.bloated, "bloated", false, "bloated SNUSP")
 	flag.BoolVar(&snusp.twist, "twist", true, "modular SNUSP flavour: twist")
+	flag.BoolVar(&snusp.eof0, "eof0", false, "EOF place 0 in the cell")
 	flag.Parse()
 	if flag.NArg() > 0 {
 		snusp.Load(flag.Arg(0))
