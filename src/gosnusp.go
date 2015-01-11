@@ -276,6 +276,7 @@ func main() {
 		snusp.Load(flag.Arg(0))
 		snusp.Run()
 		if snusp.debug {
+			log.Print("memory dump")
 			for k, v := range snusp.mem {
 				log.Print(k, v)
 			}
