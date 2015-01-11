@@ -164,6 +164,8 @@ func (e *Snusp) Interpret(p Pos, d dir.Dir, m Pos) {
 	}
 	defer e.sg.Done()
 	stdin := bufio.NewReader(os.Stdin)
+	stdout := bufio.NewWriter(os.Stdout)
+	defer stdout.Flush()
 	cstack := list.New()
 	for p.X >= 0 && p.X < e.size.W && p.Y >= 0 && p.Y < e.size.H {
 		c := e.Get(p)
@@ -240,8 +242,9 @@ func (e *Snusp) Interpret(p Pos, d dir.Dir, m Pos) {
 			}
 		case Write:
 			rb := e.GetMem(m)
-			fmt.Printf("%c", rb)
+			stdout.WriteByte(rb)
 		case Read:
+			stdout.Flush() // flush stdout before reading...
 			b_in, b_err := stdin.ReadByte()
 			if b_err == io.EOF {
 				if e.eof0 {
