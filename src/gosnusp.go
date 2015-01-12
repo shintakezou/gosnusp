@@ -87,7 +87,9 @@ func (e *Snusp) Get(p Pos) string {
 }
 
 func (e *Snusp) SetMem(p Pos, val int, overwrite bool) {
-	e.lock.Lock()
+	if e.bloated {
+		e.lock.Lock()
+	}
 	if v, ok := e.mem[p]; ok {
 		if overwrite {
 			e.mem[p] = byte(val % 256)
@@ -97,18 +99,24 @@ func (e *Snusp) SetMem(p Pos, val int, overwrite bool) {
 	} else {
 		e.mem[p] = byte(val % 256)
 	}
-	e.lock.Unlock()
+	if e.bloated {
+		e.lock.Unlock()
+	}
 }
 
 func (e *Snusp) GetMem(p Pos) byte {
 	var res byte
-	e.lock.RLock()
+	if e.bloated {
+		e.lock.RLock()
+	}
 	if v, ok := e.mem[p]; ok {
 		res = v
 	} else {
 		res = 0
 	}
-	e.lock.RUnlock()
+	if e.bloated {
+		e.lock.RUnlock()
+	}
 	return res
 }
 
