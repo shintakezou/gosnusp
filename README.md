@@ -26,3 +26,11 @@ Notes
   - The difference between twisted and untwisted Modular SNUSP is in how the Enter (`@`) and Leave (`#`) command behave. Details in the code (sorry) and explicative example on the [blog](http://shintakezou.blogspot.it/2015/01/snusp-esolang-and-interpreter-in-go.html).
 - current memory cell value should be given as program return code? It is not (yet?)
 - I am a Go absolute beginner
+
+
+Maybe-wanted features
+---------------------
+
+- Join for Bloated SNUSP?
+
+
