@@ -5,7 +5,7 @@ GoSNUSP
 
 This code implement a Core, Modular and Bloated SNUSP interpreter in the [Go programming language](http://golang.org/).
 
-[Github.io page](http://shintakezou.github.io/gosnusp) could contain a reference, in case you won't take a look at the given links (why not?) Actualy the page is just a test, and likely it will stay as it is forever (but never say never — though there's not tooo much to say about SNUSP you can't find elsewhere, and written better…)
+[Github.io page](http://shintakezou.github.io/gosnusp) could contain a reference, in case you won't take a look at the given links (why not?)… Actually the page is just a test, and likely it will stay as it is forever (but never say never — though there's not tooo much to say about SNUSP you can't find elsewhere, and written better…)
 
 
 Links and resources
