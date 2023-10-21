@@ -1,6 +1,6 @@
 /*
    gosnusp - a SNUSP esolang interpreter written in Go
-   Copyright (C) 2014  Mauro Panigada
+   Copyright (C) 2023  Mauro Panigada
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 package main
 
 import (
-	. "./snusp"
-	"./snusp/dir"
+	. "snusp"
+	"snusp/dir"
 	"bufio"
 	"container/list"
 	"flag"
